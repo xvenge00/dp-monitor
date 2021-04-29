@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import grpc
 import monitor_pb2
 import monitor_pb2_grpc
@@ -17,6 +19,7 @@ def contains_error_strings(line: str):
         'corrupt',
         'failure',
         'protect',
+        'reboot'
     ]
 
     return any(err in line.lower() for err in error_strings)
@@ -30,13 +33,22 @@ def main():
     # setup reading from serial port
     ser = serial.Serial('/dev/ttyUSB0', baudrate=115200)
     while True:
-        ser_bytes = ser.readline()
-        # TODO bude to fungovat aj pri panics/core dumps?
-        if contains_error_strings(ser_bytes.decode('utf-8')):
-            print(ser_bytes)
-            print("===============NOT OK ==================")
-            notify(stub)
-
+        try:
+            ser_bytes = ser.readline()
+            # TODO bude to fungovat aj pri panics/core dumps?h
+            if contains_error_strings(ser_bytes.decode('utf-8')):
+                try:
+                    print(ser_bytes)
+                    print("+========================================+",
+                            "|                                        |",
+                            "|              ERROR FOUND               |",
+                            "|                                        |",
+                            "+========================================+", sep='\n')
+                    notify(stub)
+                except:
+                    print("!!! detected FAILURE, but could not notify the monitor")
+        except UnicodeDecodeError:
+            pass
 
 if __name__ == '__main__':
     main()
