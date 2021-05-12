@@ -19,7 +19,8 @@ def contains_error_strings(line: str):
         'corrupt',
         'failure',
         'protect',
-        'reboot'
+        'reboot',
+        'watchdog got triggered',
     ]
 
     return any(err in line.lower() for err in error_strings)
@@ -35,7 +36,6 @@ def main():
     while True:
         try:
             ser_bytes = ser.readline()
-            # TODO bude to fungovat aj pri panics/core dumps?h
             if contains_error_strings(ser_bytes.decode('utf-8')):
                 try:
                     print(ser_bytes)
